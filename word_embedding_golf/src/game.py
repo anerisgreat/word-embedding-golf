@@ -10,29 +10,22 @@ class WordToVecGame():
         self._g = import_graph()
         self._game_done = False
     #     self._n_neighbors = n_neighbors
-    # def _get_dist_to_word(self, k):
-    #     return np.linalg.norm(self._d[k] - self._d[self._dest_word])
-    # def _get_similarity_to_word(self, k):
-    #     return _cosine_similarity(self._d[k], self._d[self._dest_word])
-    # def _update_dist(self):
-    #     self._dist = self._get_dist_to_word(self._current_word)
-    #     self._similarity = self._get_similarity_to_word(self._current_word)
+    def _get_similarity_to_word(self, k):
+        return _cosine_similarity(self._g.nodes[k]['emb'], self._g.nodes[self._dest_word]['emb'])
+    def _update_similarity(self):
+        self._similarity = self._get_similarity_to_word(self._current_word)
     def _update_neighbors(self):
         self._neighbors = list(g.neighbors(self._current_word))
     def get_neighbors(self):
         return self._neighbors
-    # def get_current_dist(self):
-    #     return self._dist
-    # def get_current_similarity(self):
-    #     return self._similarity
+    def get_current_similarity(self):
+        return self._similarity
     def get_source(self):
         return self._source_word
     def get_dest(self):
         return self._dest_word
     def get_current(self):
         return self._current_word
-    # def get_current_dist(self):
-    #     return self._dist
     def init_game(self):
         self._game_done = False
         randkeys = random.sample(list(self._d.keys()), 2)
@@ -40,7 +33,7 @@ class WordToVecGame():
         self._dest_word = randkeys[1]
         self._current_word = self._source_word
 
-        # self._update_dist()
+        self._update_similarity()
         self._update_neighbors()
         print(f'Going from {self._source_word} to {self._dest_word}')
     def get_game_done(self):
@@ -50,7 +43,7 @@ class WordToVecGame():
             return False, 'Invalid word'
         elif(k in self._neighbors):
             self._current_word = k
-            # self._update_dist()
+            self._update_similarity()
             self._update_neighbors()
             if(k == self._dest_word):
                 self._game_done = True
