@@ -1,6 +1,7 @@
 import random
 
 from .embeddings import *
+from .graph import *
 
 def _cosine_similarity(a, b):
     return np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
@@ -15,7 +16,7 @@ class WordToVecGame():
     def _update_similarity(self):
         self._similarity = self._get_similarity_to_word(self._current_word)
     def _update_neighbors(self):
-        self._neighbors = list(g.neighbors(self._current_word))
+        self._neighbors = list(self._g.neighbors(self._current_word))
     def get_neighbors(self):
         return self._neighbors
     def get_current_similarity(self):
@@ -28,7 +29,7 @@ class WordToVecGame():
         return self._current_word
     def init_game(self):
         self._game_done = False
-        randkeys = random.sample(list(self._d.keys()), 2)
+        randkeys = random.sample(list(self._g.nodes), 2)
         self._source_word = randkeys[0]
         self._dest_word = randkeys[1]
         self._current_word = self._source_word
@@ -39,7 +40,7 @@ class WordToVecGame():
     def get_game_done(self):
         return self._game_done
     def guess(self, k):
-        if(not k in self._d):
+        if(not k in self._g):
             return False, 'Invalid word'
         elif(k in self._neighbors):
             self._current_word = k
