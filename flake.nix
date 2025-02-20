@@ -52,9 +52,9 @@
       };
       fs = pkgs.lib.fileset;
       sourceFiles = fs.unions
-        [./word2vec-golf/src/embeddings.py
-        ./word2vec-golf/src/graph.py
-         ./word2vec-golf/gen_graph.py];
+        [./word-embedding-golf/src/embeddings.py
+        ./word-embedding-golf/src/graph.py
+         ./word-embedding-golf/gen_graph.py];
       wordConnectionDBDerivation = pkgs.stdenv.mkDerivation rec {
         name = "word-connection-db-derivation";
         buildInputs = [
@@ -70,7 +70,7 @@
          export GLOVE_DATA="${gloveDataDerivation}/${gloveFileName}"
          export COMMON_WORD_DATA="${commonWordsDerivation}/google-10000-english.txt"
          mkdir $out
-         python $src/word2vec-golf/gen_graph.py $out/graph.pickle
+         python $src/word-embedding-golf/gen_graph.py $out/graph.pickle
         '';
       };
 
