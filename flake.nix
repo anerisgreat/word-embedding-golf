@@ -85,7 +85,7 @@
         ];
 
         shellHook = ''
-         export GRAPH_DATA="${gloveDataDerivation}/graph.pickle"
+         export GRAPH_DATA="${wordConnectionDBDerivation}/graph.pickle"
         '';
       };
     };
