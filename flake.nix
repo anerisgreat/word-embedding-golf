@@ -1,60 +1,92 @@
+#
 {
-  description = "A basic flake using pyproject.toml project metadata";
+  #https://nix.dev/guides/recipes/python-environment.html
+  description = "Python development environment";
 
-  inputs.pyproject-nix.url = "github:pyproject-nix/pyproject.nix";
-  inputs.pyproject-nix.inputs.nixpkgs.follows = "nixpkgs";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs-python.url = "github:cachix/nixpkgs-python";
+  };
 
-  outputs =
-    { nixpkgs, pyproject-nix, ... }:
+  outputs = { self, nixpkgs, nixpkgs-python }: 
     let
-      # Loads pyproject.toml into a high-level project representation
-      # Do you notice how this is not tied to any `system` attribute or package sets?
-      # That is because `project` refers to a pure data representation.
-      project = pyproject-nix.lib.project.loadPyproject {
-        # Read & unmarshal pyproject.toml relative to this project root.
-        # projectRoot is also used to set `src` for renderers such as buildPythonPackage.
-        projectRoot = ./.;
+      system = "x86_64-linux";
+
+      pkgs = import nixpkgs { inherit system; };
+
+      gloveFileName = "glove.6B.50d.txt";
+      gloveDataDerivation = pkgs.stdenv.mkDerivation {
+        name = "glove-data-derivation";
+        src = pkgs.fetchzip {
+            url = "https://nlp.stanford.edu/data/glove.6B.zip";
+            #nix-prefetch-url --unpack <URL> gets hash, then nix hash to-sri --type sha256
+            hash = "sha256-LV9rgGNLCqvM9el6SezXyozsrP9w0+kp++gPIXcLjWE=";
+            stripRoot = false;
+        };
+        phases = [ "unpackPhase" "installPhase" ];
+        installPhase = ''
+            mkdir -p $out
+            cp $src/${gloveFileName} $out
+        '';
       };
+      myPythonWithDeps = (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
+            numpy
+            scipy
+            # matplotlib
+            scikit-learn
+            flask
+            networkx
+          ]));
 
-      # This example is only using x86_64-linux
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
-
-      # We are using the default nixpkgs Python3 interpreter & package set.
-      #
-      # This means that you are purposefully ignoring:
-      # - Version bounds
-      # - Dependency sources (meaning local path dependencies won't resolve to the local path)
-      #
-      # To use packages from local sources see "Overriding Python packages" in the nixpkgs manual:
-      # https://nixos.org/manual/nixpkgs/stable/#reference
-      #
-      # Or use an overlay generator such as uv2nix:
-      # https://github.com/pyproject-nix/uv2nix
-      python = pkgs.python3;
+      commonWordsDerivation = pkgs.stdenv.mkDerivation rec {
+        name = "common-words-derivation";
+        fetchurl = "https://apiacoa.org/publications/teaching/datasets/google-10000-english.txt";
+        src = pkgs.fetchurl rec {
+            url = fetchurl;
+            hash = "sha256-nJZdOEUm+sxZJg6U+Mz/FYJjP6OFAEq+FFXtRXBirLw=";
+            downloadToTemp = true;
+            postFetch = "install -D $downloadedFile $out/" + builtins.baseNameOf url;
+        };
+        dontUnpack = true;
+        installPhase = "install -D $src $out/" + builtins.baseNameOf fetchurl;
+      };
+      fs = pkgs.lib.fileset;
+      sourceFiles = fs.unions
+        [./word2vec-golf/src/embeddings.py
+        ./word2vec-golf/src/graph.py
+         ./word2vec-golf/gen_graph.py];
+      wordConnectionDBDerivation = pkgs.stdenv.mkDerivation rec {
+        name = "word-connection-db-derivation";
+        buildInputs = [
+          gloveDataDerivation
+          commonWordsDerivation
+          myPythonWithDeps
+        ];
+        src = fs.toSource {
+          root = ./.;
+          fileset = sourceFiles;
+        };
+        installPhase = ''
+         export GLOVE_DATA="${gloveDataDerivation}/${gloveFileName}"
+         export COMMON_WORD_DATA="${commonWordsDerivation}/google-10000-english.txt"
+         mkdir $out
+         python $src/word2vec-golf/gen_graph.py $out/graph.pickle
+        '';
+      };
 
     in
     {
-      # Create a development shell containing dependencies from `pyproject.toml`
-      devShells.x86_64-linux.default =
-        let
-          # Returns a function that can be passed to `python.withPackages`
-          arg = project.renderers.withPackages { inherit python; };
+      devShells.${system}.default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          wordConnectionDBDerivation
+          myPythonWithDeps
+          curl
+          jq
+        ];
 
-          # Returns a wrapped environment (virtualenv like) with all our packages
-          pythonEnv = python.withPackages arg;
-
-        in
-        # Create a devShell like normal.
-        pkgs.mkShell { packages = [ pythonEnv ]; };
-
-      # Build our package using `buildPythonPackage
-      packages.x86_64-linux.default =
-        let
-          # Returns an attribute set that can be passed to `buildPythonPackage`.
-          attrs = project.renderers.buildPythonPackage { inherit python; };
-        in
-        # Pass attributes to buildPythonPackage.
-        # Here is a good spot to add on any missing or custom attributes.
-        python.pkgs.buildPythonPackage (attrs // { env.CUSTOM_ENVVAR = "hello"; });
+        shellHook = ''
+         export GRAPH_DATA="${gloveDataDerivation}/graph.pickle"
+        '';
+      };
     };
 }
