@@ -1,6 +1,5 @@
 import numpy as np
 import os
-from scipy import spatial
 #https://www.kaggle.com/code/floser/examples-of-similar-word-embeddings-in-glove
 
 #Want file like "glove.6B.50d.txt"
@@ -16,16 +15,6 @@ def import_embedding_dict():
     embedding_fpath = os.environ['GLOVE_DATA']
     common_words_fpath = os.environ['COMMON_WORD_DATA']
     return _get_embedding_dict(embedding_fpath, common_words_fpath)
-
-def find_closest_embeddings(embeddings_dict, embedding):
-    return sorted(embeddings_dict.keys(),
-                  key=lambda word: \
-                    spatial.distance.euclidean(embeddings_dict[word],
-                                               embedding))
-
-def find_closest_n_words(embeddings_dict, word, n):
-    emb = embeddings_dict[word]
-    return find_closest_embeddings(embeddings_dict, emb)[:n]
 
 def _cosine_similarity(a, b):
     return np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))

@@ -1,4 +1,4 @@
-from word_embedding_golf.src import WordToVecGame
+from src import WordToVecGame
 
 g = WordToVecGame()
 g.init_game()
