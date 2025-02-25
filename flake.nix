@@ -19,15 +19,33 @@
         inherit nixpkgs; inherit nixpkgs-python; };
     in
     {
-      devShells.${system}.preprocessShell = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          preprocessPackages.preprocessDerivation
-          preprocessPackages.preprocessPython
-        ];
+      devShells.${system} = {
+        preprocessShell = pkgs.mkShell {
+            buildInputs = with pkgs; [
+                preprocessPackages.preprocessDerivation
+                preprocessPackages.preprocessPython
+            ];
 
-        shellHook = ''
-         export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
-        '';
+            shellHook = ''
+                export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
+            '';
+        };
+        default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+                preprocessPackages.preprocessDerivation
+                (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
+                    numpy
+                    networkx
+                    flask
+                ]))
+            ];
+
+            shellHook = ''
+                export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
+            '';
+        };
+
       };
+      flaskApp = import ./flask { pkgs =  pkgs; };
     };
 }
