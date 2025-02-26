@@ -34,7 +34,7 @@
 
                 wordEmbGolfGraphPkgs.wordEmbGolfGraphDrv
             ];
-            # shellHook = "export GRAPH_DATA=${wordEmbGolfGraphPkgs.wordEmbGolfGraphDrv}/graph.pickle";
+            shellHook = "export GRAPH_DATA=${wordEmbGolfGraphPkgs.wordEmbGolfGraphDrv}/graph.pickle";
         };
 
       flaskApp = wordEmbGolfWebappPkgs.flaskApp;

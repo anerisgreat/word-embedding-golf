@@ -1,1 +1,1 @@
-from .src import *
+from .word_emb_golf_graph import *
