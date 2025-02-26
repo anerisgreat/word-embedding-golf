@@ -17,12 +17,10 @@ let
     };
     commonWordsDerivation = pkgs.stdenv.mkDerivation rec {
         name = "common-words-derivation";
-        fetchurl = "https://apiacoa.org/publications/teaching/datasets/google-10000-english.txt";
+        fetchurl = "https://raw.githubusercontent.com/first20hours/google-10000-english/refs/heads/master/google-10000-english-no-swears.txt";
         src = pkgs.fetchurl rec {
             url = fetchurl;
-            hash = "sha256-nJZdOEUm+sxZJg6U+Mz/FYJjP6OFAEq+FFXtRXBirLw=";
-            downloadToTemp = true;
-            postFetch = "install -D $downloadedFile $out/" + builtins.baseNameOf url;
+            hash = "sha256-1rPgTxrDC+ZSXUFHQWbAv/KEhuzYxI3LCrnHycwF7YY=";
         };
         dontUnpack = true;
         installPhase = "install -D $src $out/" + builtins.baseNameOf fetchurl;
@@ -66,7 +64,7 @@ rec {
         unpackPhase = "true";
         installPhase = ''
             export GLOVE_DATA="${gloveDataDerivation}/${gloveFileName}"
-            export COMMON_WORD_DATA="${commonWordsDerivation}/google-10000-english.txt"
+            export COMMON_WORD_DATA="${commonWordsDerivation}/google-10000-english-no-swears.txt"
             mkdir $out
             ${wordEmbGolfGraphPython}/bin/gen_graph $out/graph.pickle
         '';

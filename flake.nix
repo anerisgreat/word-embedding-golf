@@ -1,4 +1,3 @@
-#
 {
   #https://nix.dev/guides/recipes/python-environment.html
   description = "Python development environment";
@@ -14,8 +13,13 @@
 
       pkgs = import nixpkgs { inherit system; };
 
-      flaskAppOutputs = import ./flask { inherit pkgs; inherit nixpkgs;
+      wordEmbGolfGraphPkgs = import ./word_emb_golf_graph {
+        inherit pkgs; inherit nixpkgs; inherit nixpkgs-python; inherit system;
+      };
+
+      wordEmbGolfWebappPkgs = import ./word_emb_golf_webapp { inherit pkgs; inherit nixpkgs;
                                          inherit nixpkgs-python; inherit system;
+                                         inherit wordEmbGolfGraphPkgs;
                                        };
     in
     {
@@ -25,11 +29,14 @@
                     numpy
                     networkx
                     flask
-                    flaskAppOutputs.wordEmbGolfGraphPkgs.wordEmbGolfGraphPythonPkg
+                    wordEmbGolfGraphPkgs.wordEmbGolfGraphPythonPkg
                 ]))
+
+                wordEmbGolfGraphPkgs.wordEmbGolfGraphDrv
             ];
+            # shellHook = "export GRAPH_DATA=${wordEmbGolfGraphPkgs.wordEmbGolfGraphDrv}/graph.pickle";
         };
 
-      flaskApp = flaskAppOutputs.flaskApp;
+      flaskApp = wordEmbGolfWebappPkgs.flaskApp;
     };
 }
