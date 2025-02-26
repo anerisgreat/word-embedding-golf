@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    g = load_graph(os.environ['WORD_EMB_GOLF_GRAPH_DATA_FILE'])
+    g = load_graph(os.environ['GRAPH_DATA'])
     return list(g.nodes.keys())
 
 if __name__ == '__main__':
