@@ -2,7 +2,7 @@
 
 from flask import Flask
 import os
-from .preprocess import *
+from word_emb_golf_graph.graph import load_graph
 app = Flask(__name__)
 
 @app.route('/')

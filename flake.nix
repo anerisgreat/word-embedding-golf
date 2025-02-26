@@ -19,28 +19,17 @@
                                        };
     in
     {
-      devShells.${system} = {
-        # preprocessShell = pkgs.mkShell {
-        #     buildInputs = with pkgs; [
-        #         preprocessPackages.preprocessDerivation
-        #         preprocessPackages.preprocessPython
-        #     ];
+        devShells.${system}.default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+                (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
+                    numpy
+                    networkx
+                    flask
+                    flaskAppOutputs.wordEmbGolfGraphPkgs.wordEmbGolfGraphPythonPkg
+                ]))
+            ];
+        };
 
-        #     shellHook = ''
-        #         export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
-        #     '';
-        # };
-        # default = pkgs.mkShell {
-        #     buildInputs = with pkgs; [
-        #         (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
-        #             numpy
-        #             networkx
-        #             flask
-        #         ]))
-        #     ];
-        # };
-
-      };
       flaskApp = flaskAppOutputs.flaskApp;
     };
 }

@@ -50,12 +50,13 @@ let
     };
 in
 rec {
+    wordEmbGolfGraphPythonPkg = wordEmbGolfGraphPkg;
     wordEmbGolfGraphPython = (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
       wordEmbGolfGraphPkg
         ]));
 
-    preprocessDerivation = pkgs.stdenv.mkDerivation rec {
-        name = "word-connection-db-derivation";
+    wordEmbGolfGraphDrv = pkgs.stdenv.mkDerivation rec {
+        name = "word-emb-golf-graph";
         buildInputs = [
             gloveDataDerivation
             commonWordsDerivation
