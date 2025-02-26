@@ -14,38 +14,33 @@
 
       pkgs = import nixpkgs { inherit system; };
 
-      preprocessPackages = import ./preprocess {
-        inherit pkgs; inherit system;
-        inherit nixpkgs; inherit nixpkgs-python; };
+      flaskAppOutputs = import ./flask { inherit pkgs; inherit nixpkgs;
+                                         inherit nixpkgs-python; inherit system;
+                                       };
     in
     {
       devShells.${system} = {
-        preprocessShell = pkgs.mkShell {
-            buildInputs = with pkgs; [
-                preprocessPackages.preprocessDerivation
-                preprocessPackages.preprocessPython
-            ];
+        # preprocessShell = pkgs.mkShell {
+        #     buildInputs = with pkgs; [
+        #         preprocessPackages.preprocessDerivation
+        #         preprocessPackages.preprocessPython
+        #     ];
 
-            shellHook = ''
-                export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
-            '';
-        };
-        default = pkgs.mkShell {
-            buildInputs = with pkgs; [
-                preprocessPackages.preprocessDerivation
-                (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
-                    numpy
-                    networkx
-                    flask
-                ]))
-            ];
-
-            shellHook = ''
-                export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
-            '';
-        };
+        #     shellHook = ''
+        #         export GRAPH_DATA="${preprocessPackages.preprocessDerivation}/graph.pickle"
+        #     '';
+        # };
+        # default = pkgs.mkShell {
+        #     buildInputs = with pkgs; [
+        #         (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
+        #             numpy
+        #             networkx
+        #             flask
+        #         ]))
+        #     ];
+        # };
 
       };
-      flaskApp = import ./flask { pkgs =  pkgs; };
+      flaskApp = flaskAppOutputs.flaskApp;
     };
 }

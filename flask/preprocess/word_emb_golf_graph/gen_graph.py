@@ -1,6 +1,9 @@
-import argparse
+#!/usr/bin/env python
 
-from src.graph import gen_graph, save_graph
+import argparse
+import numpy
+
+from word_emb_golf_graph.graph import gen_graph, save_graph
 
 def main():
     parser = argparse.ArgumentParser()

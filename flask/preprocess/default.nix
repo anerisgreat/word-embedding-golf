@@ -28,15 +28,30 @@ let
         installPhase = "install -D $src $out/" + builtins.baseNameOf fetchurl;
     };
     fs = pkgs.lib.fileset;
-    preprocessSourceFiles = fs.unions[
-      ./src/embeddings.py
-      ./src/graph.py
-      ./gen_graph.py];
+    wordEmbeddingGolfGraphSourceFiles = fs.unions[
+      ./setup.py
+      ./__init__.py
+      ./word_emb_golf_graph/__init__.py
+      ./word_emb_golf_graph/embeddings.py
+      ./word_emb_golf_graph/graph.py
+      ./word_emb_golf_graph/game.py
+      ./word_emb_golf_graph/gen_graph.py];
+    wordEmbGolfGraphPkg = pkgs.python3Packages.buildPythonPackage{
+      name = "word_emb_golf_graph";
+      src = fs.toSource {
+            root = ./.;
+            fileset = wordEmbeddingGolfGraphSourceFiles;
+        };
+      propagatedBuildInputs = with pkgs.python3Packages; [
+        setuptools
+        networkx
+        numpy
+      ];
+    };
 in
 rec {
-    preprocessPython = (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
-        numpy
-        networkx
+    wordEmbGolfGraphPython = (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
+      wordEmbGolfGraphPkg
         ]));
 
     preprocessDerivation = pkgs.stdenv.mkDerivation rec {
@@ -44,17 +59,15 @@ rec {
         buildInputs = [
             gloveDataDerivation
             commonWordsDerivation
-            preprocessPython
+            wordEmbGolfGraphPython
         ];
-        src = fs.toSource {
-            root = ./.;
-            fileset = preprocessSourceFiles;
-        };
+        #Skip unpack since no sources
+        unpackPhase = "true";
         installPhase = ''
             export GLOVE_DATA="${gloveDataDerivation}/${gloveFileName}"
             export COMMON_WORD_DATA="${commonWordsDerivation}/google-10000-english.txt"
             mkdir $out
-            python $src/gen_graph.py $out/graph.pickle
+            ${wordEmbGolfGraphPython}/bin/gen_graph $out/graph.pickle
         '';
     };
 }
