@@ -1,7 +1,8 @@
 import numpy
 import os
-
+import json
 from functools import lru_cache
+
 from word_emb_golf_graph.graph import load_graph
 
 @lru_cache(maxsize=1)
@@ -17,5 +18,11 @@ def useGraph(f):
 @useGraph
 def get_word_neighbors(word, g):
     return list(g.neighbors(word))
+
+@useGraph
+@lru_cache(maxsize=1)
+def get_graph_as_json(g):
+    as_dict = dict((k, get_word_neighbors(k)) for k in g.nodes)
+    return json.dumps(as_dict)
 
 

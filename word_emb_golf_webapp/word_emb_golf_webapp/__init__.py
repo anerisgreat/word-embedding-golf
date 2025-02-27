@@ -2,7 +2,7 @@ from flask import Flask, render_template
 import os
 import json
 
-from .game import get_word_neighbors
+from .graph import get_graph_as_json
 
 def create_app(test_config=None):
     # create and configure the app
@@ -26,7 +26,7 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        return render_template('index.html', graph_json = get_graph_as_json())
 
     return app
 

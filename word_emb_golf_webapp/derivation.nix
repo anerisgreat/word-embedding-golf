@@ -3,7 +3,7 @@ let _internalWordEmbGolfWebapp = with python3Packages; buildPythonApplication {
         pname = "_word_emb_golf_webapp";
         version = "1.0";
 
-        propagatedBuildInputs = [ flask wordEmbGolfGraphPkgs.wordEmbGolfGraphPythonPkg];
+        propagatedBuildInputs = [ flask networkx wordEmbGolfGraphPkgs.wordEmbGolfGraphPythonPkg];
 
         src = ./.;
     };
