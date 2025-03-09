@@ -1,33 +1,43 @@
-import networkx as nx
-import pickle
 import os
+from dataclasses import dataclass, field, asdict
+import io
+import gzip
+import base64
+import json
 
-from .embeddings import *
+#Helper for JSON formatting
+#Taken from https://stackoverflow.com/questions/54370322/how-to-limit-the-number-of-float-digits-jsonencoder-produces
+class _RoundingFloatFormatter(float):
+    __repr__ = staticmethod(lambda x: format(x, '.2f'))
 
-def gen_graph(n_neighbors = 20):
-    g = nx.DiGraph()
+@dataclass
+class WordEmbEntry:
+    neighbors : list[str] = field(default_factory = list)
+    emb : list[float] = field(default_factory = list)
+    tsne_emb : list[float] = field(default_factory = list)
 
-    d = import_embedding_dict()
+def save_graph_gzip(graph_dict, fpath):
+    #Fixing percision of floats, for all our uses we only need two decimals
+    #Taken from https://stackoverflow.com/questions/54370322/how-to-limit-the-number-of-float-digits-jsonencoder-produces
+    json.encoder.c_make_encoder = None
+    json.encoder.float = _RoundingFloatFormatter
 
-    for k in d.keys():
-        g.add_node(k, emb = d[k])
+    graph_to_pure_dict = {k : asdict(v) \
+                          for k, v in graph_dict.items()}
+    #To JSON STR
+    graph_as_json_str = json.dumps(graph_to_pure_dict)
 
-    for k in d.keys():
-        neighbors = find_closest_cosine_n_words(d, k, n_neighbors)
-        g.add_edges_from([(k, kn) for kn in neighbors])
+    graph_as_gzip_bytes = gzip.compress(graph_as_json_str.encode())
+    #Encode to base64 so it can be encoded into HTML file easily
+    base64_str = base64.b64encode(graph_as_gzip_bytes).decode('ASCII')
 
-    return g
-
-def save_graph(g, fpath):
-    with open(fpath, 'wb') as ofile:
-        pickle.dump(g, ofile)
+    #Write base64 of gzip of dict of graph
+    with open(fpath, 'w') as ofile:
+        ofile.write(base64_str)
 
 def export_graph(g):
-    save_graph(g, os.environ['GRAPH_DATA'])
+    save_graph_gzip(g, os.environ['GRAPH_DATA'])
 
-def load_graph(fpath):
-    with open(fpath, 'rb') as ifile:
-        return pickle.load(ifile)
-
-def import_graph():
-    return load_graph(os.environ['GRAPH_DATA'])
+def load_graph_as_gzip_base64(fpath):
+    with open(fpath, 'r') as ifile:
+        return ifile.read()
