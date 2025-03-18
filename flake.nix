@@ -46,6 +46,6 @@
             shellHook = "export GRAPH_DATA=${wordEmbGolfGraphPreprocessDrv}/graph.json";
         };
 
-      flaskApp = wordEmbGolfWebappPkgs.flaskApp;
+      staticWebappDerivation = wordEmbGolfWebappPkgs.staticWebappDerivation;
     };
 }

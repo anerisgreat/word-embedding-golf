@@ -1,8 +1,9 @@
 { pkgs, nixpkgs, nixpkgs-python, system, wordEmbGolfGraphPythonPkg, wordEmbGolfGraphPreprocessDrv}:
 {
 
-  flaskApp = pkgs.callPackage ./derivation.nix {
+  staticWebappDerivation = pkgs.callPackage ./static_webapp_derivation.nix {
     wordEmbGolfGraphPythonPkg = wordEmbGolfGraphPythonPkg;
     wordEmbGolfGraphPreprocessDrv = wordEmbGolfGraphPreprocessDrv;
   };
+
 }
