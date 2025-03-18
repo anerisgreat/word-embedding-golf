@@ -17,6 +17,11 @@
 
   var current_path = [];
 
+  var update_time = 0;
+  var just_updated_path = false;
+
+  const DIST_PER_SECOND = 1;
+
   function redraw_path(){
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
@@ -30,9 +35,51 @@
       var cc = graph_dict[current_path[0]]['tsne_emb'];
       ctx.moveTo(cc[0]*canvas_width, cc[1] * canvas_height);
       ctx.beginPath();
-      for(let i = 0; i < current_path.length; ++i){
+
+      for(let i = 0; i < current_path.length - 1; ++i){
         cc = graph_dict[current_path[i]]['tsne_emb'];
         ctx.lineTo(cc[0]*canvas_width, cc[1] * canvas_height);
+      }
+      var current_word_coords = null;
+
+      if(just_updated_path){
+          if(current_path.length > 1){
+              cca = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
+              ccb = graph_dict[current_path[current_path.length - 2]]['tsne_emb'];
+
+              ccax = cca[0];
+              ccbx = ccb[0];
+              ccay = cca[1];
+              ccby = ccb[1];
+
+              ccxd = ccax - ccbx;
+              ccyd = ccay - ccby;
+
+              total_traverse_len = Math.sqrt(ccxd * ccxd + ccyd * ccyd);
+              // update_time_seconds = time.getSeconds();
+              // update_time_milliseconds = time.getMilliseconds();
+              current_time = new Date();
+
+              milliseconds_passed = (current_time - update_time);
+
+              target_traverse_dist = (DIST_PER_SECOND / 1000 )* (milliseconds_passed);
+              target_dist_as_frac = target_traverse_dist / total_traverse_len;
+              if(target_dist_as_frac > 1){
+                  target_dist_as_frac = 1;
+                  just_updated_path = false;
+              }
+
+              ccx = ccbx + ccxd * target_dist_as_frac;
+              ccy = ccby + ccyd * target_dist_as_frac;
+              current_word_coords = [ccx, ccy];
+              ctx.lineTo(ccx*canvas_width, ccy * canvas_height);
+          } else {
+              just_updated_path = false;
+          }
+      } else {
+        current_word_coords = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
+        ctx.lineTo(current_word_coords[0]*canvas_width, current_word_coords[1] * canvas_height);
+
       }
       ctx.stroke();
 
@@ -48,7 +95,8 @@
       ctx.fill()
       ctx.beginPath();
       cc = graph_dict[current_word]['tsne_emb'];
-      ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 2, 0, 2 * Math.PI);
+      ctx.arc(current_word_coords[0]*canvas_width,
+              current_word_coords[1]*canvas_height, 2, 0, 2 * Math.PI);
       ctx.fillStyle = "#0000FF";
       ctx.stroke()
   }
@@ -82,9 +130,14 @@
 
   function step_word_game(word){
       current_word = word;
+
       if(target_word == current_word){
           init_game();
+          just_updated_path = false;
       } else {
+          update_time = new Date();
+          just_updated_path = true;
+
           update_word_buttons(current_word);
           current_path.push(current_word);
           update_word_state();
@@ -117,6 +170,7 @@
 
   function setup() {
       init_game();
+      setInterval(redraw_path, 50);
   }
 </script>
 </head>
@@ -143,7 +197,7 @@
       </table>
     </div>
     <div class="col border" id="game-map-div">
-      <canvas id="canvas"></div>
+      <canvas id="canvas" width="100" height="100"></canvas>
     </div>
   </div>
   <div class="row">
