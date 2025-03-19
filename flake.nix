@@ -30,7 +30,7 @@
         wordEmbGolfGraphPreprocessDrv = wordEmbGolfGraphPreprocessDrv;
       };
     in
-    {
+    rec {
         devShells.${system}.default = pkgs.mkShell {
             buildInputs = with pkgs; [
                 (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
@@ -47,5 +47,6 @@
         };
 
       staticWebappDerivation = wordEmbGolfWebappPkgs.staticWebappDerivation;
+      packages.${system}.default = staticWebappDerivation;
     };
 }
