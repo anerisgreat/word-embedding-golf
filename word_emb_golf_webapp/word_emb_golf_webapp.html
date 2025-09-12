@@ -44,26 +44,30 @@
 
       if(just_updated_path){
           if(current_path.length > 1){
+              // Drawing the last leg as 'animated'
               cca = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
               ccb = graph_dict[current_path[current_path.length - 2]]['tsne_emb'];
 
+              // Coordinates of last line segment
               ccax = cca[0];
               ccbx = ccb[0];
               ccay = cca[1];
               ccby = ccb[1];
 
+              // Delta X, delta Y
               ccxd = ccax - ccbx;
               ccyd = ccay - ccby;
 
+              // Distance of last leg
               total_traverse_len = Math.sqrt(ccxd * ccxd + ccyd * ccyd);
-              // update_time_seconds = time.getSeconds();
-              // update_time_milliseconds = time.getMilliseconds();
-              current_time = new Date();
 
+              // Getting time passed since last update to know how far to draw
+              current_time = new Date();
               milliseconds_passed = (current_time - update_time);
 
               target_traverse_dist = (DIST_PER_SECOND / 1000 )* (milliseconds_passed);
               target_dist_as_frac = target_traverse_dist / total_traverse_len;
+              //If we've already finished the line
               if(target_dist_as_frac > 1){
                   target_dist_as_frac = 1;
                   just_updated_path = false;
@@ -77,22 +81,28 @@
               just_updated_path = false;
           }
       } else {
-        current_word_coords = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
-        ctx.lineTo(current_word_coords[0]*canvas_width, current_word_coords[1] * canvas_height);
+          // If we've finished updating, and just wnat to draw last line as is
+          current_word_coords = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
+          ctx.lineTo(current_word_coords[0]*canvas_width, current_word_coords[1] * canvas_height);
 
       }
       ctx.stroke();
 
+      // Source dot
       ctx.beginPath();
       cc = graph_dict[source_word]['tsne_emb'];
       ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
       ctx.fillStyle = "#00FF00";
       ctx.fill()
+
+      // Dest dot
       ctx.beginPath();
       cc = graph_dict[target_word]['tsne_emb'];
       ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
       ctx.fillStyle = "#FF0000";
       ctx.fill()
+
+      // Current dot
       ctx.beginPath();
       cc = graph_dict[current_word]['tsne_emb'];
       ctx.arc(current_word_coords[0]*canvas_width,
@@ -173,6 +183,40 @@
       setInterval(redraw_path, 50);
   }
 </script>
+<style>
+
+.press-button{
+    background-color: #28a4c9;
+    border-radius: .5em;
+    box-shadow: inset 0 0 0 1px hsla(0,0%,0%,.2),
+                inset 0 2px 0 hsla(0,0%,100%,.1),
+                inset 0 -0.2em 0 hsla(0,0%,100%,.1),
+                inset 0 -0.25em 0 hsla(0,0%,0%,.25),
+                0 0.25em 0.25em hsla(0,0%,0%,.05);
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-family: sans-serif;
+    <!-- font-size: 1em; -->
+    font-weight: bold;
+    line-height: 1.5;
+    margin: 0 .5em 1em;
+    padding: 1em 1.5em .75em;
+    text-decoration: none;
+}
+
+.press-button:active {
+    box-shadow: inset 0 0 0 1px hsla(0,0%,0%,.2),
+                inset 0 2px 0 hsla(0,0%,100%,.1),
+                inset 0 0 0 3em hsla(0,0%,100%,.2),
+                inset 0 0.25em 0.5em hsla(0,0%,0%,.05),
+                0 -1px 1px hsla(0,0%,0%,.1),
+                0 1px 1px hsla(0,0%,100%,.25);
+    margin-top: .25em;
+    outline: none;
+    padding-bottom: .5em;
+}
+</style>
 </head>
 <body onLoad="setup()">
 
@@ -209,7 +253,7 @@
                 {% for tci in range(4) %}
                 <td class="text-left">
                   <button type="button"
-                            class="btn btn-dark w-100 px-1"
+                            class="press-button w-100"
                             id="neighbor-btn-{{tri*4 + tci}}"
                             onclick="word_button_callback(this)">
                   </button>

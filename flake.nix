@@ -46,7 +46,25 @@
             shellHook = "export GRAPH_DATA=${wordEmbGolfGraphPreprocessDrv}/graph.json";
         };
 
-      staticWebappDerivation = wordEmbGolfWebappPkgs.staticWebappDerivation;
-      packages.${system}.default = staticWebappDerivation;
+      apps.${system}.default = let
+          serv = pkgs.writeShellApplication {
+              # Our shell script name is serve
+              # so it is available at $out/bin/serve
+              name = "serve";
+              # Caddy is a web server with a convenient CLI interface
+              runtimeInputs = [pkgs.caddy wordEmbGolfWebappPkgs.staticWebappDerivation];
+              text = ''
+              # Serve the current directory on port 8090
+              caddy file-server --listen :8090 --root ${wordEmbGolfWebappPkgs.staticWebappDerivation}
+              '';
+          };
+      in {
+          type = "app";
+          # Using a derivation in here gets replaced
+          # with the path to the built output
+          program = "${serv}/bin/serve";
+      };
+
+      packages.${system}.default = wordEmbGolfWebappPkgs.staticWebappDerivation;
     };
 }
