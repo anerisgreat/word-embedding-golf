@@ -9,32 +9,81 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
   <script type="application/text" id="graph_gzip_base64">{{graph_gzip_base64}}</script>
   <style>
-.button-16 {
-  background-color: #f8f9fa;
-  border: 1px solid #f8f9fa;
-  border-radius: 4px;
-  color: #3c4043;
-  cursor: pointer;
-  font-family: arial,sans-serif;
-  font-size: 14px;
-  height: 36px;
-  line-height: 27px;
-  min-width: 54px;
-  padding: 0 16px;
-  text-align: center;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-  white-space: pre;
-}
+    :root {
+    --source-color: #a2c1fa;
+    --target-color: #32a852;
+    }
 
-.button-16:hover {
-  border-color: #dadce0;
-  box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
-  color: #202124;
-}
+    body{
+        font-family: arial,sans-serif;
+        font-size: 14px;
+    }
+    .button-16 {
+        background-color: #f8f9fa;
+        border: 1px solid #f8f9fa;
+        border-radius: 4px;
+        color: #3c4043;
+        cursor: pointer;
+        height: 36px;
+        line-height: 27px;
+        min-width: 54px;
+        padding: 0 16px;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        white-space: pre;
+    }
+
+    .button-16:hover {
+        border-color: #dadce0;
+        box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
+        color: #202124;
+    }
+
+    .source-word {
+      color: var(--source-color);
+    }
+
+    .target-word {
+      color: var(--target-color);
+    }
+
+    .current-word {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .arrow {
+      color: #d9d9d9;
+      padding: 0px;
+      margin: 0px;
+      display:inline-block;
+      -webkit-transform:scale(2,1); /* Safari and Chrome */
+      -moz-transform:scale(2,1); /* Firefox */
+      -ms-transform:scale(2,1); /* IE 9 */
+      -o-transform:scale(2,1); /* Opera */
+      transform:scale(2,1); /* W3C */
+    }
+
+    .map-section {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .map-subsection {
+        vertical-align: bottom;
+        display:table-cell;
+    }
+
+    .vert-center {
+      justify-content: center; /* Vertically centers the items */
+      /* Other styling for the container */
+    }
   </style>
-<script>
+  <script>
   var graph_dict = get_graph_from_gzip_str(document.getElementById('graph_gzip_base64').innerHTML);
 
   var source_word = "";
@@ -51,10 +100,18 @@
   function redraw_path(){
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
 
+      <!-- canvas.style.width='1000'; -->
+      <!-- canvas.style.height='1000'; -->
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformations
+      ctx.scale(dpr, dpr);
 
       const canvas_height = canvas.height;
       const canvas_width = canvas.width;
+
       ctx.lineWidth = 1;
       ctx.clearRect(0, 0, canvas_width, canvas_height);
 
@@ -114,18 +171,22 @@
       }
       ctx.stroke();
 
+      const root = document.documentElement;
+      const source_color = getComputedStyle(root).getPropertyValue('--source-color');
+      const target_color = getComputedStyle(root).getPropertyValue('--target-color');
+
       // Source dot
       ctx.beginPath();
       cc = graph_dict[source_word]['tsne_emb'];
       ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = "#00FF00";
+      ctx.fillStyle = source_color;
       ctx.fill()
 
       // Dest dot
       ctx.beginPath();
       cc = graph_dict[target_word]['tsne_emb'];
       ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = "#FF0000";
+      ctx.fillStyle = target_color;
       ctx.fill()
 
       // Current dot
@@ -136,6 +197,7 @@
       ctx.fillStyle = "#0000FF";
       ctx.stroke()
   }
+  window.addEventListener('resize', redraw_path);
 
   function get_graph_from_gzip_str(gzip_str){
       //https://stackoverflow.com/questions/69179292/i-want-to-decompress-a-gzip-string-with-javascript
@@ -197,9 +259,9 @@
   }
 
   function update_word_state(){
-      document.getElementById("source-td").innerHTML = source_word;
-      document.getElementById("current-td").innerHTML = current_word;
-      document.getElementById("target-td").innerHTML = target_word;
+      document.getElementById("source").innerHTML = source_word;
+      document.getElementById("current").innerHTML = current_word;
+      document.getElementById("target").innerHTML = target_word;
 
       redraw_path();
   }
@@ -212,30 +274,22 @@
 </head>
 <body onLoad="setup()" style="background-color: #f8f9fa;">
 
-<div class="container-fluid pt-5 pb-5 text-dark">
-  <div class="row">
-    <div class="col text-center" id="game-state-div" style="background-color:transparent;">
-      <table style="background-color:transparent; table-layout:fixed; width: 100%;">
-        <tbody>
-          <tr>
-            <td>Source</td>
-            <td id="source-td" class="font-weight-bold"></td>
-          </tr>
-          <tr>
-            <td>Current</td>
-            <td id="current-td" class="font-weight-bold"></td>
-          </tr>
-          <tr>
-            <td>Target</td>
-            <td id="target-td" class="font-weight-bold"></td>
-          </tr>
-        </tbody>
-      </table>
+<div class="container-fluid pt-5 pb-5 pl-5 pr-5" style="max-width: 600px;">
+  <div class="row pb-2">
+    <div class="col-4" id="game-state-div" style="background-color:transparent; display:table;">
+      <div class="map-subsection">
+        <div id="source" class="source-word map-section"></div>
+        <div class="arrow map-section">&#x2304;</div>
+        <div id="current" class="map-section current-word"></div>
+        <div class="arrow map-section">&#x2304;</div>
+        <div id="target" class="map-section target-word"></div>
+      </div>
     </div>
-    <div class="col" id="game-map-div">
-      <canvas id="canvas" width="100" height="100"></canvas>
+    <div class="col" id="game-map-div" style="margin:0 auto;">
+      <canvas id="canvas" style="width:100%; aspect-ratio: 1/1; height:auto;"></canvas>
     </div>
   </div>
+  <div class="row"><hr></div>
   <div class="row">
     <div class="col" name="game-buttons-div">
       <table class="table table-borderless" style="table-layout:fixed;">
