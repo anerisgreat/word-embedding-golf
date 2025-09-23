@@ -12,33 +12,39 @@
     :root {
     --source-color: #a2c1fa;
     --target-color: #32a852;
+    --glow-color: #edd774;
     }
 
     body{
         font-family: arial,sans-serif;
         font-size: 14px;
     }
+
     .button-16 {
+        text-align: left;
         background-color: #f8f9fa;
         border: 1px solid #f8f9fa;
         border-radius: 4px;
         color: #3c4043;
         cursor: pointer;
-        height: 36px;
-        line-height: 27px;
-        min-width: 54px;
-        padding: 0 16px;
-        text-align: center;
         user-select: none;
         -webkit-user-select: none;
         touch-action: manipulation;
-        white-space: pre;
+        width: 100%;
     }
 
     .button-16:hover {
         border-color: #dadce0;
         box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
         color: #202124;
+    }
+
+    .word-panel .button-16 {
+        padding: 0 16px;
+        line-height: 27px;
+        min-width: 54px;
+        white-space: pre;
+        height: 100%;
     }
 
     .source-word {
@@ -78,6 +84,7 @@
         display:table-cell;
     }
 
+
     .vert-center {
       justify-content: center; /* Vertically centers the items */
       /* Other styling for the container */
@@ -96,6 +103,22 @@
   var just_updated_path = false;
 
   const DIST_PER_SECOND = 1;
+
+  var button_glow_amounts = new Array(20).fill(0.0);
+  const GLOW_DURATION = 0.5;
+  const GLOW_TIMER_TICK = 0.05;
+
+  function update_word_glow(){
+    const root = document.documentElement;
+    let glow_color = getComputedStyle(root).getPropertyValue('--glow-color');
+    for(let i = 0; i < 20; ++i){
+      let button_elem = document.getElementById("neighbor-btn-" + i);
+      let glow_alpha_hex = (Math.floor(button_glow_amounts[i]*255)).toString(16);
+      button_elem.style.boxShadow = 'inset 0px 0px 3px 1px ' + glow_color + glow_alpha_hex;
+      button_glow_amounts[i] = Math.max(
+        0.0, button_glow_amounts[i] - GLOW_TIMER_TICK / GLOW_DURATION);
+    }
+  }
 
   function redraw_path(){
       const canvas = document.getElementById("canvas");
@@ -269,6 +292,70 @@
   function setup() {
       init_game();
       setInterval(redraw_path, 50);
+      setInterval(update_word_glow, 50);
+  }
+
+  function reconstruct_shortest_path(parent_map, start_node, target_node) {
+    let path = [];
+    let current_node = target_node;
+
+    while (current_node !== null) {
+      path.unshift(current_node); // Add to the beginning to get correct order
+      current_node = parent_map.get(current_node);
+    }
+
+    // Check if the path actually starts with the start_node
+    if (path[0] === start_node) {
+      return path;
+    } else {
+      return null; // Target was found but path reconstruction failed (e.g., target not reachable from start)
+    }
+  }
+
+  function find_shortest_path(graph, start_node, target_node) {
+    if (!graph[start_node] || !graph[target_node]) {
+      return null; // Start or target node not in graph
+    }
+
+    let queue = [];
+    let visited = new Set();
+    let parent_map = new Map(); // Stores {child: parent}
+
+    queue.push(start_node);
+    visited.add(start_node);
+    parent_map.set(start_node, null); // Start node has no parent
+
+    while (queue.length > 0) {
+      let current_node = queue.shift();
+
+      if (current_node === target_node) {
+        return reconstruct_shortest_path(parent_map, start_node, target_node);
+      }
+
+      for (let neighbor of graph[current_node]['neighbors']) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          parent_map.set(neighbor, current_node);
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    return null; // Target not reachable
+  }
+
+  function get_next_step_hint(){
+      path = find_shortest_path(graph_dict, current_word, target_word);
+
+      next_word = path[1];
+      var found = false;
+      for(let i = 0; i < 20 && !found; ++i){
+        let button_elem = document.getElementById("neighbor-btn-" + i);
+          if(button_elem.innerHTML == next_word){
+            found = true;
+            button_glow_amounts[i] = 1.0;
+          }
+      }
   }
 </script>
 </head>
@@ -278,6 +365,19 @@
   <div class="row pb-2">
     <div class="col-4" id="game-state-div" style="background-color:transparent; display:table;">
       <div class="map-subsection">
+
+      </div>
+      <div class="map-subsection">
+        <div class="map-section">
+          <button
+            type="button"
+            class="button-16"
+            id="hint"
+            onclick="get_next_step_hint()">
+            Hint
+          </button>
+        </div>
+        <div class="map-section"><hr></div>
         <div id="source" class="source-word map-section"></div>
         <div class="arrow map-section">&#x2304;</div>
         <div id="current" class="map-section current-word"></div>
@@ -285,7 +385,7 @@
         <div id="target" class="map-section target-word"></div>
       </div>
     </div>
-    <div class="col" id="game-map-div" style="margin:0 auto;">
+    <div class="col" id="game-map-div"style="padding:left; margin:0 auto;">
       <canvas id="canvas" style="width:100%; aspect-ratio: 1/1; height:auto;"></canvas>
     </div>
   </div>
@@ -297,9 +397,9 @@
             {% for tri in range(5) %}
             <tr style="padding:0;">
                 {% for tci in range(4) %}
-                <td class="text-left" style="padding:0;align-items:stretch;">
+                <td class="text-left word-panel" style="padding:0;align-items:stretch;">
                   <button type="button"
-                          class="button-16 w-100 h-100"
+                          class="button-16"
                           style="margin:0;"
                           id="neighbor-btn-{{tri*4 + tci}}"
                           onclick="word_button_callback(this)">

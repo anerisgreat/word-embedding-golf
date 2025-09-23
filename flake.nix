@@ -47,15 +47,16 @@
         };
 
       apps.${system}.default = let
+          pythonEnv = pkgs.python3;
           serv = pkgs.writeShellApplication {
               # Our shell script name is serve
               # so it is available at $out/bin/serve
               name = "serve";
               # Caddy is a web server with a convenient CLI interface
-              runtimeInputs = [pkgs.caddy wordEmbGolfWebappPkgs.staticWebappDerivation];
+              runtimeInputs = [pythonEnv wordEmbGolfWebappPkgs.staticWebappDerivation];
               text = ''
-              # Serve the current directory on port 8090
-              caddy file-server --listen :8090 --root ${wordEmbGolfWebappPkgs.staticWebappDerivation}
+              # Serve the current directory on port 8080
+              python -m http.server --bind 0.0.0.0 8080 -d ${wordEmbGolfWebappPkgs.staticWebappDerivation}
               '';
           };
       in {
