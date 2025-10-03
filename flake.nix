@@ -52,7 +52,6 @@
               # Our shell script name is serve
               # so it is available at $out/bin/serve
               name = "serve";
-              # Caddy is a web server with a convenient CLI interface
               runtimeInputs = [pythonEnv wordEmbGolfWebappPkgs.staticWebappDerivation];
               text = ''
               # Serve the current directory on port 8080

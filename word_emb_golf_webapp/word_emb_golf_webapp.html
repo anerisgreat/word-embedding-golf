@@ -6,374 +6,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script> -->
   <script type="application/text" id="graph_gzip_base64">{{graph_gzip_base64}}</script>
-  <style>
-    :root {
-    --source-color: #a2c1fa;
-    --target-color: #32a852;
-    --glow-color: #edd774;
-    }
-
-    body{
-        font-family: arial,sans-serif;
-        font-size: 14px;
-    }
-
-    .button-16 {
-        text-align: left;
-        background-color: #f8f9fa;
-        border: 1px solid #f8f9fa;
-        border-radius: 4px;
-        color: #3c4043;
-        cursor: pointer;
-        user-select: none;
-        -webkit-user-select: none;
-        touch-action: manipulation;
-        width: 100%;
-    }
-
-    .button-16:hover {
-        border-color: #dadce0;
-        box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
-        color: #202124;
-    }
-
-    .word-panel .button-16 {
-        padding: 0 16px;
-        line-height: 27px;
-        min-width: 54px;
-        white-space: pre;
-        height: 100%;
-    }
-
-    .source-word {
-      color: var(--source-color);
-    }
-
-    .target-word {
-      color: var(--target-color);
-    }
-
-    .current-word {
-        font-size: 20px;
-        font-weight: bold;
-    }
-
-    .arrow {
-      color: #d9d9d9;
-      padding: 0px;
-      margin: 0px;
-      display:inline-block;
-      -webkit-transform:scale(2,1); /* Safari and Chrome */
-      -moz-transform:scale(2,1); /* Firefox */
-      -ms-transform:scale(2,1); /* IE 9 */
-      -o-transform:scale(2,1); /* Opera */
-      transform:scale(2,1); /* W3C */
-    }
-
-    .map-section {
-        margin-top: 0;
-        margin-bottom: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-    }
-
-    .map-subsection {
-        vertical-align: bottom;
-        display:table-cell;
-    }
-
-
-    .vert-center {
-      justify-content: center; /* Vertically centers the items */
-      /* Other styling for the container */
-    }
-  </style>
-  <script>
-  var graph_dict = get_graph_from_gzip_str(document.getElementById('graph_gzip_base64').innerHTML);
-
-  var source_word = "";
-  var current_word = "";
-  var target_word = "";
-
-  var current_path = [];
-
-  var update_time = 0;
-  var just_updated_path = false;
-
-  const DIST_PER_SECOND = 1;
-
-  var button_glow_amounts = new Array(20).fill(0.0);
-  const GLOW_DURATION = 0.5;
-  const GLOW_TIMER_TICK = 0.05;
-
-  function update_word_glow(){
-    const root = document.documentElement;
-    let glow_color = getComputedStyle(root).getPropertyValue('--glow-color');
-    for(let i = 0; i < 20; ++i){
-      let button_elem = document.getElementById("neighbor-btn-" + i);
-      let glow_alpha_hex = (Math.floor(button_glow_amounts[i]*255)).toString(16);
-      button_elem.style.boxShadow = 'inset 0px 0px 3px 1px ' + glow_color + glow_alpha_hex;
-      button_glow_amounts[i] = Math.max(
-        0.0, button_glow_amounts[i] - GLOW_TIMER_TICK / GLOW_DURATION);
-    }
-  }
-
-  function redraw_path(){
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
-      const dpr = window.devicePixelRatio || 1;
-
-      <!-- canvas.style.width='1000'; -->
-      <!-- canvas.style.height='1000'; -->
-      canvas.width = canvas.clientWidth * dpr;
-      canvas.height = canvas.clientHeight * dpr;
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformations
-      ctx.scale(dpr, dpr);
-
-      const canvas_height = canvas.height;
-      const canvas_width = canvas.width;
-
-      ctx.lineWidth = 1;
-      ctx.clearRect(0, 0, canvas_width, canvas_height);
-
-      var cc = graph_dict[current_path[0]]['tsne_emb'];
-      ctx.moveTo(cc[0]*canvas_width, cc[1] * canvas_height);
-      ctx.beginPath();
-
-      for(let i = 0; i < current_path.length - 1; ++i){
-        cc = graph_dict[current_path[i]]['tsne_emb'];
-        ctx.lineTo(cc[0]*canvas_width, cc[1] * canvas_height);
-      }
-      var current_word_coords = null;
-
-      if(just_updated_path){
-          if(current_path.length > 1){
-              // Drawing the last leg as 'animated'
-              cca = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
-              ccb = graph_dict[current_path[current_path.length - 2]]['tsne_emb'];
-
-              // Coordinates of last line segment
-              ccax = cca[0];
-              ccbx = ccb[0];
-              ccay = cca[1];
-              ccby = ccb[1];
-
-              // Delta X, delta Y
-              ccxd = ccax - ccbx;
-              ccyd = ccay - ccby;
-
-              // Distance of last leg
-              total_traverse_len = Math.sqrt(ccxd * ccxd + ccyd * ccyd);
-
-              // Getting time passed since last update to know how far to draw
-              current_time = new Date();
-              milliseconds_passed = (current_time - update_time);
-
-              target_traverse_dist = (DIST_PER_SECOND / 1000 )* (milliseconds_passed);
-              target_dist_as_frac = target_traverse_dist / total_traverse_len;
-              //If we've already finished the line
-              if(target_dist_as_frac > 1){
-                  target_dist_as_frac = 1;
-                  just_updated_path = false;
-              }
-
-              ccx = ccbx + ccxd * target_dist_as_frac;
-              ccy = ccby + ccyd * target_dist_as_frac;
-              current_word_coords = [ccx, ccy];
-              ctx.lineTo(ccx*canvas_width, ccy * canvas_height);
-          } else {
-              just_updated_path = false;
-          }
-      } else {
-          // If we've finished updating, and just wnat to draw last line as is
-          current_word_coords = graph_dict[current_path[current_path.length - 1]]['tsne_emb'];
-          ctx.lineTo(current_word_coords[0]*canvas_width, current_word_coords[1] * canvas_height);
-
-      }
-      ctx.stroke();
-
-      const root = document.documentElement;
-      const source_color = getComputedStyle(root).getPropertyValue('--source-color');
-      const target_color = getComputedStyle(root).getPropertyValue('--target-color');
-
-      // Source dot
-      ctx.beginPath();
-      cc = graph_dict[source_word]['tsne_emb'];
-      ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = source_color;
-      ctx.fill()
-
-      // Dest dot
-      ctx.beginPath();
-      cc = graph_dict[target_word]['tsne_emb'];
-      ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = target_color;
-      ctx.fill()
-
-      // Current dot
-      ctx.beginPath();
-      cc = graph_dict[current_word]['tsne_emb'];
-      ctx.arc(current_word_coords[0]*canvas_width,
-              current_word_coords[1]*canvas_height, 2, 0, 2 * Math.PI);
-      ctx.fillStyle = "#0000FF";
-      ctx.stroke()
-  }
-  window.addEventListener('resize', redraw_path);
-
-  function get_graph_from_gzip_str(gzip_str){
-      //https://stackoverflow.com/questions/69179292/i-want-to-decompress-a-gzip-string-with-javascript
-      const gziped_data = atob(gzip_str);
-      const gziped_data_byte_array = Uint8Array.from(gziped_data,
-                                                     c => c.charCodeAt(0));
-      const ungziped_data = pako.ungzip(gziped_data_byte_array);
-      const ungziped_json = new TextDecoder().decode(ungziped_data);
-      const graph_dict = JSON.parse(ungziped_json);
-
-      return graph_dict;
-  }
-
-  function random_element(arr){
-      let i = Math.floor(Math.random() * arr.length);
-      return arr[i];
-  }
-
-  function init_game(){
-      all_words = Object.keys(graph_dict);
-      source_word = random_element(all_words);
-      target_word = random_element(all_words);
-      current_word = source_word;
-      update_word_buttons(current_word);
-      current_path = [current_word];
-      update_word_state();
-  }
-
-  function step_word_game(word){
-      current_word = word;
-
-      if(target_word == current_word){
-          init_game(); //Completion, game won!
-          just_updated_path = false;
-      } else {
-          update_time = new Date();
-          just_updated_path = true; //Used for drawing line
-
-          update_word_buttons(current_word);
-          current_path.push(current_word);
-          update_word_state();
-      }
-  }
-
-  function update_word_buttons(word){
-      if(word in graph_dict){
-          var neighbors = graph_dict[word]['neighbors'];
-          for(let i = 0; i < 20; ++i){
-              let buttonElem = document.getElementById("neighbor-btn-" + i);
-              buttonElem.innerHTML = neighbors[i];
-              buttonElem.dataset.word = neighbors[i];
-          }
-      }
-  }
-
-  function word_button_callback(elem){
-      word = elem.dataset.word;
-      step_word_game(word);
-  }
-
-  function update_word_state(){
-      document.getElementById("source").innerHTML = source_word;
-      document.getElementById("current").innerHTML = current_word;
-      document.getElementById("target").innerHTML = target_word;
-
-      redraw_path();
-  }
-
-  function setup() {
-      init_game();
-      setInterval(redraw_path, 50);
-      setInterval(update_word_glow, 50);
-  }
-
-  function reconstruct_shortest_path(parent_map, start_node, target_node) {
-    let path = [];
-    let current_node = target_node;
-
-    while (current_node !== null) {
-      path.unshift(current_node); // Add to the beginning to get correct order
-      current_node = parent_map.get(current_node);
-    }
-
-    // Check if the path actually starts with the start_node
-    if (path[0] === start_node) {
-      return path;
-    } else {
-      return null; // Target was found but path reconstruction failed (e.g., target not reachable from start)
-    }
-  }
-
-  function find_shortest_path(graph, start_node, target_node) {
-    if (!graph[start_node] || !graph[target_node]) {
-      return null; // Start or target node not in graph
-    }
-
-    let queue = [];
-    let visited = new Set();
-    let parent_map = new Map(); // Stores {child: parent}
-
-    queue.push(start_node);
-    visited.add(start_node);
-    parent_map.set(start_node, null); // Start node has no parent
-
-    while (queue.length > 0) {
-      let current_node = queue.shift();
-
-      if (current_node === target_node) {
-        return reconstruct_shortest_path(parent_map, start_node, target_node);
-      }
-
-      for (let neighbor of graph[current_node]['neighbors']) {
-        if (!visited.has(neighbor)) {
-          visited.add(neighbor);
-          parent_map.set(neighbor, current_node);
-          queue.push(neighbor);
-        }
-      }
-    }
-
-    return null; // Target not reachable
-  }
-
-  function get_next_step_hint(){
-      path = find_shortest_path(graph_dict, current_word, target_word);
-
-      next_word = path[1];
-      var found = false;
-      for(let i = 0; i < 20 && !found; ++i){
-        let button_elem = document.getElementById("neighbor-btn-" + i);
-          if(button_elem.innerHTML == next_word){
-            found = true;
-            button_glow_amounts[i] = 1.0;
-          }
-      }
-  }
-</script>
+  <script type="module" src="main.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body onLoad="setup()" style="background-color: #f8f9fa;">
-
-<div class="container-fluid pt-5 pb-5 pl-5 pr-5" style="max-width: 600px;">
+<body>
+<dialog id="welcome">
+  <h2>Welcome!</h2>
+  <p>Thanks for visiting.</p>
+  <button id="closeBtn">Got it</button>
+</dialog>
+<div class="container-fluid pt-5 pb-5 pl-5 pr-5 main-div" style="max-width: 500px;">
   <div class="row pb-2">
     <div class="col-4" id="game-state-div" style="background-color:transparent; display:table;">
-      <div class="map-subsection">
-
-      </div>
       <div class="map-subsection">
         <div class="map-section">
           <button
             type="button"
             class="button-16"
-            id="hint"
-            onclick="get_next_step_hint()">
+            id="hint_btn">
             Hint
           </button>
         </div>
@@ -402,7 +54,6 @@
                           class="button-16"
                           style="margin:0;"
                           id="neighbor-btn-{{tri*4 + tci}}"
-                          onclick="word_button_callback(this)">
                   </button>
                 </td>
                 {% endfor %}
@@ -413,8 +64,20 @@
     </div>
   </div>
 </div>
-<p id="test">
-</p>
+<script type="module">
+    //Boostrapping
+    import { setup, hint_callback, word_button_callback } from './main.js';
+    //Hint button
+    document.getElementById('hint_btn').addEventListener('click', hint_callback);
+
+    //Buttons
+    for(let i = 0; i < 20; ++i){
+        let button_elem = document.getElementById("neighbor-btn-" + i);
+        button_elem.addEventListener('click', ev => word_button_callback(ev.currentTarget, ev));
+    }
+    // window.addEventListener('resize', update_path);
+    window.addEventListener('load', setup)
+</script>
 
 </body>
 </html>

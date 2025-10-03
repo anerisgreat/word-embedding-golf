@@ -4,6 +4,8 @@ let
   srcFiles = fs.unions[
       ./render_webapp.py
       ./word_emb_golf_webapp.html
+      ./style.css
+      ./main.js
     ];
 in
 pkgs.stdenv.mkDerivation rec {
@@ -23,6 +25,8 @@ pkgs.stdenv.mkDerivation rec {
     installPhase = ''
         mkdir $out
         python $src/render_webapp.py --graph ${wordEmbGolfGraphPreprocessDrv}/graph.json --template $src/word_emb_golf_webapp.html --output $out/index.html
+        cp $src/style.css $out/style.css
+        cp $src/main.js $out/main.js
     '';
 }
 
