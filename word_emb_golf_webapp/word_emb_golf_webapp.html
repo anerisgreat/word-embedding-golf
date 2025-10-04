@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<dialog id="welcome">
-  <h2>Welcome!</h2>
-  <p>Thanks for visiting.</p>
-  <button id="closeBtn">Got it</button>
+<dialog id="game_start_dialog">
+    <h2>Hello!</h2>
+    <p>This is a native HTML dialog.</p>
+    <button id="dialog_close_btn" class="button-16">Close</button>
 </dialog>
 <div class="container-fluid pt-5 pb-5 pl-5 pr-5 main-div" style="max-width: 500px;">
   <div class="row pb-2">
@@ -66,7 +66,14 @@
 </div>
 <script type="module">
     //Boostrapping
-    import { setup, hint_callback, word_button_callback } from './main.js';
+    import {
+        setup,
+        hint_callback,
+        word_button_callback,
+        init_dialog,
+        dialog_close_callback
+    } from './main.js';
+
     //Hint button
     document.getElementById('hint_btn').addEventListener('click', hint_callback);
 
@@ -76,7 +83,12 @@
         button_elem.addEventListener('click', ev => word_button_callback(ev.currentTarget, ev));
     }
     // window.addEventListener('resize', update_path);
+
+    document.getElementById("dialog_close_btn").addEventListener('click', dialog_close_callback);
+
+    //Finally window looad
     window.addEventListener('load', setup)
+    window.addEventListener('load', init_dialog)
 </script>
 
 </body>

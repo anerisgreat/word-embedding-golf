@@ -79,3 +79,17 @@ body{
     justify-content: center; /* Vertically centers the items */
     /* Other styling for the container */
 }
+
+dialog {
+    padding: 1.5rem;
+    border: 1px solid #666;
+    border-radius: .4rem;
+    max-width: 90%;
+    font-family: arial,sans-serif;
+    font-size: 14px;
+    background-color: #f8f9fa;
+}
+
+dialog::backdrop {               /* backdrop is automatically added */
+    background: rgba(0,0,0,.5);
+}

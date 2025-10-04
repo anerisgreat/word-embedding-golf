@@ -313,3 +313,12 @@ export function hint_callback(){
         }
     }
 }
+
+export function dialog_close_callback(){
+    const dlg   = document.getElementById('game_start_dialog');
+    dlg.close();
+}
+export function init_dialog(){
+    const dlg   = document.getElementById('game_start_dialog');
+    dlg.showModal();
+}
