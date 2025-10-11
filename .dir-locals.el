@@ -4,5 +4,5 @@
 ((python-mode . ((python-interpreter . "nix develop --command python")
                  (python-shell-interpreter . "nix")
                  (python-shell-interpreter-args . "develop --command python -i")
-                 (projectile-project-run-cmd . "nix develop .#preprocessPython --command python ./myapp.py")
+                 (projectile-project-run-cmd . "nix run")
                  )))
