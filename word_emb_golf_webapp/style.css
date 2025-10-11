@@ -93,3 +93,15 @@ dialog {
 dialog::backdrop {               /* backdrop is automatically added */
     background: rgba(0,0,0,.5);
 }
+
+.dialog-selectbtn {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-left: auto;
+}
+
+.dialog-selectbtn button {
+    flex: 1 1 0;
+    max-width: 100%;
+}

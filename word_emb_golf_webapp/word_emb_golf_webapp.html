@@ -13,9 +13,16 @@
 </head>
 <body>
 <dialog id="game_start_dialog">
-    <h2>Hello!</h2>
-    <p>This is a native HTML dialog.</p>
-    <button id="dialog_close_btn" class="button-16">Close</button>
+    <h2>Word Embedding Golf!</h2>
+    <p>Select a difficulty and press the button!</p>
+    <div class="dialog-selectbtn">
+      <select id="game_dialog_difficulty_select">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button id="game_dialog_start_btn" class="button-16">Begin!</button>
+    </div>
 </dialog>
 <div class="container-fluid pt-5 pb-5 pl-5 pr-5 main-div" style="max-width: 500px;">
   <div class="row pb-2">
@@ -49,7 +56,9 @@
             {% for tri in range(5) %}
             <tr style="padding:0;">
                 {% for tci in range(4) %}
-                <td class="text-left word-panel" style="padding:0;align-items:stretch;">
+                <td
+                  class="text-left word-panel"
+                  style="padding:0;align-items:stretch;">
                   <button type="button"
                           class="button-16"
                           style="margin:0;"
@@ -82,9 +91,9 @@
         let button_elem = document.getElementById("neighbor-btn-" + i);
         button_elem.addEventListener('click', ev => word_button_callback(ev.currentTarget, ev));
     }
-    // window.addEventListener('resize', update_path);
 
-    document.getElementById("dialog_close_btn").addEventListener('click', dialog_close_callback);
+    //Dialog
+    document.getElementById("game_dialog_start_btn").addEventListener('click', dialog_close_callback);
 
     //Finally window looad
     window.addEventListener('load', setup)
