@@ -28,7 +28,7 @@ class GameState {
         }
 
         GameState._instance = this;
-
+        this.initialized = false;
     }
 
     init_game(){
@@ -40,6 +40,8 @@ class GameState {
         this.update_time = 0;
         this.just_updated_path = false;
         this.button_glow_amounts = new Array(20).fill(0.0);
+        this.initialized = true;
+        this.game_ended = false;
     }
 
     static get_instance() {
@@ -49,6 +51,8 @@ class GameState {
     //Ticks button glow makes dimmer
     static tick_button_glow() {
         let gs = GameState.get_instance();
+        if(!gs.initialized) { return; }
+
         for(let i = 0; i < 20; ++i){
             gs.button_glow_amounts[i] = Math.max(
                 0.0, gs.button_glow_amounts[i] - GLOW_TIMER_TICK / GLOW_DURATION);
@@ -71,15 +75,13 @@ class GameState {
     step_word_game(word){
         this.current_word = word;
 
-        if(this.target_word == word){
-            // init_game(); //Completion, game won!
-            this.init_game();
-            this.just_updated_path = false;
-        } else {
-            this.update_time = new Date();
-            this.just_updated_path = true; //Used for drawing line
+        this.update_time = new Date();
+        this.just_updated_path = true; //Used for drawing line
 
-            this.current_path.push(this.current_word);
+        this.current_path.push(this.current_word);
+
+        if(this.target_word == word){
+            this.game_ended = true;
         }
     }
 
@@ -90,11 +92,12 @@ class GameState {
 
 //Updates word glow for all buttons
 function update_word_glow(){
+    let gs = GameState.get_instance();
+    if(!gs.initialized) { return; }
     const root = document.documentElement;
     let glow_color = getComputedStyle(root).getPropertyValue('--glow-color');
     for(let i = 0; i < 20; ++i){
         let button_elem = document.getElementById("neighbor-btn-" + i);
-        let gs = GameState.get_instance();
         let glow_alpha_hex = (Math.floor(gs.get_button_glow(i)*255)).toString(16);
         button_elem.style.boxShadow = 'inset 0px 0px 3px 1px ' + glow_color + glow_alpha_hex;
     }
@@ -102,6 +105,8 @@ function update_word_glow(){
 
 //Redraws the path on the canvas
 function update_path(){
+    let gs = GameState.get_instance();
+    if(!gs.initialized) { return; }
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
@@ -121,7 +126,6 @@ function update_path(){
 
 
     //Game state
-    let gs = GameState.get_instance();
     var cc = GRAPH_DICT[gs.current_path[0]]['tsne_emb'];
     ctx.moveTo(cc[0]*canvas_width, cc[1] * canvas_height);
     ctx.beginPath();
@@ -203,7 +207,7 @@ function update_path(){
     ctx.arc(current_word_coords[0]*canvas_width,
             current_word_coords[1]*canvas_height, 2, 0, 2 * Math.PI);
     ctx.fillStyle = "#0000FF";
-    ctx.stroke()
+    ctx.stroke();
 }
 
 
@@ -225,9 +229,13 @@ function update_word_buttons(word){
 
 export function word_button_callback(elem){
     let word = elem.dataset.word;
-    GameState.get_instance().step_word_game(word);
-    update_word_buttons(word);
+    let gs = GameState.get_instance();
+    gs.step_word_game(word);
+    update_word_buttons(gs.current_word);
     update_word_state();
+    if(gs.game_ended){
+        _game_end_dialog_init();
+    }
 }
 
 function update_word_state(){
@@ -240,14 +248,17 @@ function update_word_state(){
     update_path();
 }
 
-export function setup() {
+export function new_game() {
     let gs = GameState.get_instance();
     gs.init_game();
+    update_word_buttons(gs.current_word);
+    update_word_state();
+}
+
+export function setup() {
     setInterval(update_path, 50);
     setInterval(GameState.tick_button_glow, 50);
     setInterval(update_word_glow, 50);
-    update_word_buttons();
-    update_word_state();
 }
 
 function _reconstruct_shortest_path(parent_map, start_node, target_node) {
@@ -312,13 +323,49 @@ export function hint_callback(){
             gs.set_button_glow(i, 1.0);
         }
     }
+    if(!found){
+        console.log(next_word);
+        console.log(gs.current_word);
+        console.log(gs.target_word);
+    }
 }
 
-export function dialog_close_callback(){
+export function game_start_dialog_close(){
     const dlg   = document.getElementById('game_start_dialog');
     dlg.close();
+
+    new_game();
 }
-export function init_dialog(){
+
+export function game_start_dialog_init(){
     const dlg   = document.getElementById('game_start_dialog');
     dlg.showModal();
 }
+
+function _game_end_dialog_init(){
+    const gs = GameState.get_instance();
+    let dlg = document.getElementById('game_end_dialog');
+
+    let dlg_n_steps = dlg.querySelector('#game_end_dialog_n_steps');
+    dlg_n_steps.innerHTML = gs.current_path.length - 1;
+
+    let dlg_source = dlg.querySelector('#game_end_dialog_source');
+    dlg_source.innerHTML = gs.source_word;
+    let dlg_target = dlg.querySelector('#game_end_dialog_target');
+    dlg_target.innerHTML = gs.target_word;
+
+    let shortest_path = _find_shortest_path(GRAPH_DICT, gs.source_word, gs.target_word);
+    let dlg_n_shortest_steps = dlg.querySelector('#game_end_dialog_n_shortest_path');
+    dlg_n_shortest_steps.innerHTML = shortest_path.length - 1;
+
+    dlg.showModal();
+}
+
+export function game_end_dialog_close(){
+    const gs = GameState.get_instance();
+    let dlg = document.getElementById('game_end_dialog');
+    dlg.close();
+
+    new_game();
+}
+

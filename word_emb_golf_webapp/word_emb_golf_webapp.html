@@ -16,13 +16,31 @@
     <h2>Word Embedding Golf!</h2>
     <p>Select a difficulty and press the button!</p>
     <div class="dialog-selectbtn">
-      <select id="game_dialog_difficulty_select">
+      <select id="game_start_dialog_difficulty_select">
         <option value="easy">Easy</option>
         <option value="medium">Medium</option>
         <option value="hard">Hard</option>
       </select>
-      <button id="game_dialog_start_btn" class="button-16">Begin!</button>
+      <button id="game_start_dialog_start_btn" class="button-16">Begin!</button>
     </div>
+</dialog>
+<dialog id="game_end_dialog">
+    <h2>Game ended!</h2>
+    <p>It took you <span id="game_end_dialog_n_steps">42</span> steps!</p>
+    <p>
+      The shortest path from
+      <span id="game_end_dialog_source">Baldurdash</span>
+      to
+      <span id="game_end_dialog_target">Tiramisu</span>
+      takes only
+      <span id="game_end_dialog_n_shortest_path">42</span>
+      steps!
+    </p> <!--  -->
+    <button id="game_end_dialog_start_btn" class="button-16">
+      Start a new game!
+    </button>
+    <!-- This line is problematic, we'd need to figure out edgecases -->
+    <!-- <p>You visited the word <span id="game_end_dialog_most_visited">Baldurdash</span> <span id="game_end_dialog_n_visited">42</span> times!</p> -->
 </dialog>
 <div class="container-fluid pt-5 pb-5 pl-5 pr-5 main-div" style="max-width: 500px;">
   <div class="row pb-2">
@@ -79,8 +97,9 @@
         setup,
         hint_callback,
         word_button_callback,
-        init_dialog,
-        dialog_close_callback
+        game_start_dialog_init,
+        game_start_dialog_close,
+        game_end_dialog_close
     } from './main.js';
 
     //Hint button
@@ -93,11 +112,12 @@
     }
 
     //Dialog
-    document.getElementById("game_dialog_start_btn").addEventListener('click', dialog_close_callback);
+    document.getElementById("game_start_dialog_start_btn").addEventListener('click', game_start_dialog_close);
+    document.getElementById("game_end_dialog_start_btn").addEventListener('click', game_end_dialog_close);
 
     //Finally window looad
     window.addEventListener('load', setup)
-    window.addEventListener('load', init_dialog)
+    window.addEventListener('load', game_start_dialog_init)
 </script>
 
 </body>

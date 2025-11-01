@@ -2,18 +2,19 @@
     --source-color: #a2c1fa;
     --target-color: #32a852;
     --glow-color: #edd774;
+    --back-color: #f8f9fa;
 }
 
 body{
     font-family: arial,sans-serif;
     font-size: 14px;
-    background-color: #f8f9fa;
+    background-color: var(--back-color);
 }
 
 .button-16 {
     text-align: left;
-    background-color: #f8f9fa;
-    border: 1px solid #f8f9fa;
+    background-color: var(--back-color);
+    border: 1px solid var(--back-color);
     border-radius: 4px;
     color: #3c4043;
     cursor: pointer;
@@ -87,7 +88,7 @@ dialog {
     max-width: 90%;
     font-family: arial,sans-serif;
     font-size: 14px;
-    background-color: #f8f9fa;
+    background-color: var(--back-color);
 }
 
 dialog::backdrop {               /* backdrop is automatically added */
