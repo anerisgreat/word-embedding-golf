@@ -369,3 +369,22 @@ export function game_end_dialog_close(){
     new_game();
 }
 
+export function game_end_dialog_open_path(){
+    const gs = GameState.get_instance();
+    let ge_dlg = document.getElementById('game_end_dialog');
+    let p_dlg = document.getElementById('path_dialog');
+    ge_dlg.close();
+    p_dlg.showModal();
+
+    let list_div = p_dlg.querySelector('#wrap_div');
+    const wrapped = gs.current_path.map(w=>`<span class="item">${w}</span>`);
+    list_div.innerHTML = wrapped.join('');
+}
+
+export function path_dialog_back(){
+    let ge_dlg = document.getElementById('game_end_dialog');
+    let p_dlg = document.getElementById('path_dialog');
+    p_dlg.close();
+    ge_dlg.showModal();
+}
+

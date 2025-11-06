@@ -32,15 +32,28 @@
       <span id="game_end_dialog_source">Baldurdash</span>
       to
       <span id="game_end_dialog_target">Tiramisu</span>
-      takes only
+      takes
       <span id="game_end_dialog_n_shortest_path">42</span>
       steps!
     </p> <!--  -->
+    <button id="game_end_dialog_view_path" class="button-16">
+        View your path</button>
+    </button>
     <button id="game_end_dialog_start_btn" class="button-16">
-      Start a new game!
+        Start a new game!
     </button>
     <!-- This line is problematic, we'd need to figure out edgecases -->
     <!-- <p>You visited the word <span id="game_end_dialog_most_visited">Baldurdash</span> <span id="game_end_dialog_n_visited">42</span> times!</p> -->
+</dialog>
+<dialog id="path_dialog">
+    <h2>Your path</h2>
+    <div class="fixed‑list">
+        <div class="wrap" id="wrap_div">
+        </div>
+    </div>
+    <button id="path_dialog_back_btn" class="button-16">
+        Back
+    </button>
 </dialog>
 <div class="container-fluid pt-5 pb-5 pl-5 pr-5 main-div" style="max-width: 500px;">
   <div class="row pb-2">
@@ -99,7 +112,9 @@
         word_button_callback,
         game_start_dialog_init,
         game_start_dialog_close,
-        game_end_dialog_close
+        game_end_dialog_close,
+        game_end_dialog_open_path,
+        path_dialog_back
     } from './main.js';
 
     //Hint button
@@ -114,6 +129,9 @@
     //Dialog
     document.getElementById("game_start_dialog_start_btn").addEventListener('click', game_start_dialog_close);
     document.getElementById("game_end_dialog_start_btn").addEventListener('click', game_end_dialog_close);
+    document.getElementById("game_end_dialog_view_path").addEventListener('click', game_end_dialog_open_path);
+    document.getElementById("path_dialog_back_btn").addEventListener('click', path_dialog_back);
+
 
     //Finally window looad
     window.addEventListener('load', setup)

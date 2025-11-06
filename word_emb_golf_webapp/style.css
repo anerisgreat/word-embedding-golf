@@ -106,3 +106,29 @@ dialog::backdrop {               /* backdrop is automatically added */
     flex: 1 1 0;
     max-width: 100%;
 }
+
+.fixed‑list {
+    height: 180px;               /* fixed space */
+    overflow-y: auto;            /* scroll when needed */
+    padding: .5rem;
+    /* border: 1px solid #ccc; */
+    /* background:#fafafa; */
+}
+
+/* make the words wrap onto new lines */
+.wrap {
+    display: flex;
+    flex-wrap: wrap;            /* flow to next line when line is full */
+    align-items: baseline;
+}
+
+.item {
+    /* space before the next word */
+    margin-right: .4em;
+}
+
+/* add a comma after every item except the last one */
+.item:not(:last-child)::after {
+    content: ", ";
+}
+
