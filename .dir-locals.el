@@ -1,8 +1,17 @@
 ;;; Directory Local Variables            -*- no-byte-compile: t -*-
 ;;; For more information see (info "(emacs) Directory Variables")
 
-((python-mode . ((python-interpreter . "nix develop --command python")
+(
+ (python-mode . (
+                 (python-interpreter . "nix develop --command python")
                  (python-shell-interpreter . "nix")
                  (python-shell-interpreter-args . "develop --command python -i")
                  (projectile-project-run-cmd . "nix run")
-                 )))
+                 )
+              )
+
+ (org-mode . (
+              (org-babel-python-command . "my‑python‑wrapper --opt")
+              )
+           )
+ )

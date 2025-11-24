@@ -38,6 +38,7 @@ pkgs.stdenv.mkDerivation rec {
         (pkgs.python3.withPackages (python-pkgs: with python-pkgs; [
             wordEmbGolfGraphPythonPkg
             scikit-learn
+            networkx
         ]))
     ];
     src = fs.toSource{
