@@ -38,6 +38,7 @@
                     networkx
                     scikit-learn
                     flask
+                    pytest
                     wordEmbGolfGraphPythonPkg
                 ]))
 
