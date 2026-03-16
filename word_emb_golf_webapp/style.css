@@ -3,6 +3,8 @@
     --target-color: #32a852;
     --glow-color: #edd774;
     --back-color: #f8f9fa;
+    --good-hint-color: #afeeee;
+    --bad-hint-color: #ff6347;
 }
 
 body{
@@ -28,6 +30,20 @@ body{
     border-color: #dadce0;
     box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
     color: #202124;
+}
+
+.button-16:hover {
+    border-color: #dadce0;
+    box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
+    color: #202124;
+}
+
+.button-16.good-word {
+    background-color: var(--good-hint-color);
+}
+
+.button-16.bad-word {
+    background-color: var(--bad-hint-color);
 }
 
 .word-panel .button-16 {

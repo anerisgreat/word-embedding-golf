@@ -218,11 +218,37 @@ function _random_element(arr){
 
 function update_word_buttons(word){
     if(word in GRAPH_DICT){
+        // Disabled choke_words due to processing time
+        // let choke_words = _check_word_optionality();
         var neighbors = GRAPH_DICT[word]['neighbors'];
+        let l = _get_current_path_len();
         for(let i = 0; i < 20; ++i){
             let buttonElem = document.getElementById("neighbor-btn-" + i);
             buttonElem.innerHTML = neighbors[i];
             buttonElem.dataset.word = neighbors[i];
+
+            // Removing good-word marking due to processing time
+            // Also seems useless, no words are marked
+            // And I don't think it is a bug.
+            // if(choke_words.includes(neighbors[i])){
+            //     buttonElem.classList.add('good-word');
+            //     buttonElem.classList.remove('bad-word');
+            // } else {
+            // buttonElem.classList.remove('good-word');
+
+            // Only enabling bad-word
+            // Check length of path using word
+            let ll = _get_path_len(neighbors[i]);
+            // If length is longer than current length, it's a bad choice.
+            if(ll > l){
+                // Mark word as 'bad word'
+                buttonElem.classList.add('bad-word');
+            }else{
+                // Clear word of markings
+                buttonElem.classList.remove('bad-word');
+            };
+
+            // }
         }
     }
 }
@@ -310,6 +336,63 @@ function _find_shortest_path(graph, start_node, target_node) {
     return null; // Target not reachable
 }
 
+function _check_word_optionality_internal(
+    graph, source_word, target_word, stopping_n)
+{
+    if(stopping_n == 0){
+        return [];
+    }
+    let path = _find_shortest_path(graph, source_word, target_word);
+    if(path == null){
+        return [];
+    }
+    let checked_word = path[1];
+    // console.log(checked_word)
+    // const omit = (obj, ...keys) =>
+        // Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
+    console.log(checked_word);
+    console.log(graph[checked_word]);
+    console.log(stopping_n);
+
+    const new_graph = structuredClone(graph);
+    new_graph[checked_word]['neighbors'] = [];
+    // const new_graph = { ...graph, checked_word: {'neighbors' : []} };
+    console.log(new_graph[checked_word]);
+    let ret = _check_word_optionality_internal(new_graph,
+                                  source_word,
+                                  target_word,
+                                  stopping_n - 1);
+    return ret.concat([checked_word]);
+}
+
+function _get_current_path_len(){
+    let gs = GameState.get_instance();
+    let source_word = gs.current_word;
+    let target_word = gs.target_word;
+    let p = _find_shortest_path(GRAPH_DICT, source_word, target_word);
+    return p.length;
+};
+
+function _get_path_len(source_word){
+    let gs = GameState.get_instance();
+    let target_word = gs.target_word;
+    let p = _find_shortest_path(GRAPH_DICT, source_word, target_word);
+    return p.length;
+};
+
+function _check_word_optionality(){
+    let gs = GameState.get_instance();
+    let source_word = gs.current_word;
+    let target_word = gs.target_word;
+    // We check for up to 5
+    let word_options = _check_word_optionality_internal(
+        GRAPH_DICT, source_word, target_word, 6);
+    if((word_options.length) > 5){
+        return [];
+    }
+    return word_options;
+}
+
 export function hint_callback(){
     let gs = GameState.get_instance();
     let path = _find_shortest_path(GRAPH_DICT, gs.current_word, gs.target_word);
@@ -366,7 +449,7 @@ export function game_end_dialog_close(){
     let dlg = document.getElementById('game_end_dialog');
     dlg.close();
 
-    new_game();
+    game_start_dialog_init();
 }
 
 export function game_end_dialog_open_path(){
@@ -387,4 +470,5 @@ export function path_dialog_back(){
     p_dlg.close();
     ge_dlg.showModal();
 }
+
 

@@ -180,3 +180,5 @@ result
 .direnv
 *.html
 *.zip
+
+.agent-shell
