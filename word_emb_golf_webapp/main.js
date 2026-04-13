@@ -31,7 +31,7 @@ class GameState {
         this.initialized = false;
     }
 
-    init_game(){
+    init_game(difficulty){
         let all_words = Object.keys(GRAPH_DICT);
         this.source_word = _random_element(all_words);
         this.target_word = _random_element(all_words);
@@ -42,6 +42,7 @@ class GameState {
         this.button_glow_amounts = new Array(20).fill(0.0);
         this.initialized = true;
         this.game_ended = false;
+        this.difficulty = difficulty;
     }
 
     static get_instance() {
@@ -236,17 +237,22 @@ function update_word_buttons(word){
             // } else {
             // buttonElem.classList.remove('good-word');
 
-            // Only enabling bad-word
-            // Check length of path using word
-            let ll = _get_path_len(neighbors[i]);
-            // If length is longer than current length, it's a bad choice.
-            if(ll > l){
-                // Mark word as 'bad word'
-                buttonElem.classList.add('bad-word');
-            }else{
-                // Clear word of markings
+            // Only enabling bad-word in easy mode
+            let gs2 = GameState.get_instance();
+            if(gs2.difficulty === 'easy'){
+                // Check length of path using word
+                let ll = _get_path_len(neighbors[i]);
+                // If length is longer than current length, it's a bad choice.
+                if(ll > l){
+                    // Mark word as 'bad word'
+                    buttonElem.classList.add('bad-word');
+                }else{
+                    // Clear word of markings
+                    buttonElem.classList.remove('bad-word');
+                };
+            } else {
                 buttonElem.classList.remove('bad-word');
-            };
+            }
 
             // }
         }
@@ -274,9 +280,9 @@ function update_word_state(){
     update_path();
 }
 
-export function new_game() {
+export function new_game(difficulty) {
     let gs = GameState.get_instance();
-    gs.init_game();
+    gs.init_game(difficulty);
     update_word_buttons(gs.current_word);
     update_word_state();
 }
@@ -415,9 +421,10 @@ export function hint_callback(){
 
 export function game_start_dialog_close(){
     const dlg   = document.getElementById('game_start_dialog');
+    const difficulty = document.getElementById('game_start_dialog_difficulty_select').value;
     dlg.close();
 
-    new_game();
+    new_game(difficulty);
 }
 
 export function game_start_dialog_init(){

@@ -43,28 +43,69 @@
                 ]))
 
                 wordEmbGolfGraphPreprocessDrv
+                cloudflared
+                qrencode
             ];
             shellHook = "export GRAPH_DATA=${wordEmbGolfGraphPreprocessDrv}/graph.json";
         };
 
-      apps.${system}.default = let
+      apps.${system} = let
           pythonEnv = pkgs.python3;
           serv = pkgs.writeShellApplication {
-              # Our shell script name is serve
-              # so it is available at $out/bin/serve
               name = "serve";
               runtimeInputs = [pythonEnv wordEmbGolfWebappPkgs.staticWebappDerivation];
               text = ''
-              # Serve the current directory on port 8080
               python -m http.server --bind 0.0.0.0 8080 -d ${wordEmbGolfWebappPkgs.staticWebappDerivation}
               '';
           };
-      in {
-          type = "app";
-          # Using a derivation in here gets replaced
-          # with the path to the built output
-          program = "${serv}/bin/serve";
-      };
+          tunnelApp = pkgs.writeShellApplication {
+            name = "tunnel";
+            runtimeInputs = [ pkgs.python3 pkgs.cloudflared pkgs.qrencode ];
+            text = ''
+              echo "Starting local server and Cloudflare tunnel..."
+              echo ""
+              
+              echo "Starting local server on http://localhost:8080..."
+              python -m http.server --bind 0.0.0.0 8080 -d ${wordEmbGolfWebappPkgs.staticWebappDerivation} &
+              SERVER_PID=$!
+              
+              sleep 2
+              
+              echo ""
+              echo "Starting HTTPS tunnel..."
+              echo "Use the QR code below on your device:"
+              echo ""
+              
+              cloudflared tunnel --url http://localhost:8080 2>&1 | \
+                while IFS= read -r line; do
+                  echo "$line"
+                  if echo "$line" | grep -q "https://.*trycloudflare.com"; then
+                    URL=$(echo "$line" | grep -o "https://[^ ]*trycloudflare.com")
+                    echo ""
+                    echo "=========================================="
+                    echo "TUNNEL URL: $URL"
+                    echo "=========================================="
+                    echo ""
+                    echo "QR Code:"
+                    echo ""
+                    qrencode -t ANSIUTF8 "$URL"
+                    echo ""
+                  fi
+                done
+              
+              kill $SERVER_PID 2>/dev/null
+            '';
+          };
+        in {
+          default = {
+            type = "app";
+            program = "${serv}/bin/serve";
+          };
+          tunnel = {
+            type = "app";
+            program = "${tunnelApp}/bin/tunnel";
+          };
+        };
 
       packages.${system}.default = wordEmbGolfWebappPkgs.staticWebappDerivation;
     };

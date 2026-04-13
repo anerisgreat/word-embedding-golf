@@ -18,11 +18,47 @@
     <div class="dialog-selectbtn">
       <select id="game_start_dialog_difficulty_select">
         <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
         <option value="hard">Hard</option>
       </select>
       <button id="game_start_dialog_start_btn" class="button-16">Begin!</button>
+      <button id="help_btn" class="button-16">What is this?</button>
     </div>
+</dialog>
+<dialog id="help_dialog">
+    <h2>What Is This</h2>
+    <p>Welcome to <u>Word Embedding Golf!</u></p>
+    <p>This game is an educational tool learned to show you how the
+      computer itself sees words and the relationship between them.
+    </p>
+    <p>
+      This game is based off of the
+      <a href="https://nlp.stanford.edu/data/glove.6B.zip">
+        GLOVE
+      </a>
+      word embedding space, while the list
+      of words themselves is based off Google's
+      <a href = "https://raw.githubusercontent.com/first20hours/google-10000-english/refs/heads/master/google-10000-english-no-swears.txt">
+        most common words list
+      </a>
+      . You start with a word. Below are twenty buttons corresponding to the
+      twenty words with the closest embedding as seen by GLOVE to the current
+      word. In other words, these twenty words are closest in meaning to the
+      current word, as understood by the GLOVE embedding space.
+    </p>
+    <p>
+      Your job is to get from the starting word to the end word using jumps to
+      the nearest neighbors. In the upper right you will see a map based off a
+      TSNE embedding of the latent space, showing your starting word, target
+      word, and the path taken.
+    </p>
+    <p>
+      In Easy mode, unproductive words are marked in red. These are words that
+      do not bring you closer to the target word. They may take your farther, or
+      may take you to a word that is equally distant from the target.
+
+      In hard mode you don't get these hints.
+    </p>
+    <button id="help_dialog_close_btn" class="button-16">Close</button>
 </dialog>
 <dialog id="game_end_dialog">
     <h2>Game ended!</h2>
@@ -131,6 +167,12 @@
     document.getElementById("game_end_dialog_start_btn").addEventListener('click', game_end_dialog_close);
     document.getElementById("game_end_dialog_view_path").addEventListener('click', game_end_dialog_open_path);
     document.getElementById("path_dialog_back_btn").addEventListener('click', path_dialog_back);
+    document.getElementById("help_btn").addEventListener('click', () => {
+        document.getElementById('help_dialog').showModal();
+    });
+    document.getElementById("help_dialog_close_btn").addEventListener('click', () => {
+        document.getElementById('help_dialog').close();
+    });
 
 
     //Finally window looad
