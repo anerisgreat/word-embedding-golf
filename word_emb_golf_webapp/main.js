@@ -118,8 +118,8 @@ function update_path(){
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformations
     ctx.scale(dpr, dpr);
 
-    const canvas_height = canvas.height;
-    const canvas_width = canvas.width;
+    const canvas_height = canvas.clientHeight;
+    const canvas_width = canvas.clientWidth;
 
     ctx.lineWidth = 1;
     //Clear
@@ -177,7 +177,6 @@ function update_path(){
             gs.unset_just_updated_path();
         }
     } else {
-        // If we've finished updating, and just wnat to draw last line as is
         current_word_coords = GRAPH_DICT[gs.current_path[gs.current_path.length - 1]]['tsne_emb'];
         ctx.lineTo(current_word_coords[0]*canvas_width, current_word_coords[1] * canvas_height);
 
@@ -191,14 +190,14 @@ function update_path(){
     // Source dot
     ctx.beginPath();
     cc = GRAPH_DICT[gs.source_word]['tsne_emb'];
-    ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
+    ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5/dpr, 0, 2 * Math.PI);
     ctx.fillStyle = source_color;
     ctx.fill()
 
     // Dest dot
     ctx.beginPath();
     cc = GRAPH_DICT[gs.target_word]['tsne_emb'];
-    ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5, 0, 2 * Math.PI);
+    ctx.arc(cc[0]*canvas_width, cc[1]*canvas_height, 5/dpr, 0, 2 * Math.PI);
     ctx.fillStyle = target_color;
     ctx.fill()
 
@@ -206,7 +205,7 @@ function update_path(){
     ctx.beginPath();
     cc = GRAPH_DICT[gs.current_word]['tsne_emb'];
     ctx.arc(current_word_coords[0]*canvas_width,
-            current_word_coords[1]*canvas_height, 2, 0, 2 * Math.PI);
+            current_word_coords[1]*canvas_height, 2/dpr, 0, 2 * Math.PI);
     ctx.fillStyle = "#0000FF";
     ctx.stroke();
 }

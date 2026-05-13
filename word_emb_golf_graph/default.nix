@@ -9,6 +9,7 @@ let
       ./word_emb_golf_graph/graph.py];
 in pkgs.python3Packages.buildPythonPackage{
       name = "word_emb_golf_graph";
+      format = "setuptools";
       src = fs.toSource {
             root = ./.;
             fileset = wordEmbeddingGolfGraphSourceFiles;
