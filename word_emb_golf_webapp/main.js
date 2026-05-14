@@ -468,6 +468,11 @@ export function game_end_dialog_open_path(){
     let list_div = p_dlg.querySelector('#wrap_div');
     const wrapped = gs.current_path.map(w=>`<span class="item">${w}</span>`);
     list_div.innerHTML = wrapped.join('');
+
+    let shortest_path = _find_shortest_path(GRAPH_DICT, gs.source_word, gs.target_word);
+    let shortest_div = p_dlg.querySelector('#shortest_path_div');
+    const shortest_wrapped = shortest_path.map(w=>`<span class="item">${w}</span>`);
+    shortest_div.innerHTML = shortest_wrapped.join('');
 }
 
 export function path_dialog_back(){

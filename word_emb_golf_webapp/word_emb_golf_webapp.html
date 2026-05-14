@@ -73,7 +73,7 @@
       steps!
     </p> <!--  -->
     <button id="game_end_dialog_view_path" class="button-16">
-        View your path</button>
+        View paths
     </button>
     <button id="game_end_dialog_start_btn" class="button-16">
         Start a new game!
@@ -82,10 +82,12 @@
     <!-- <p>You visited the word <span id="game_end_dialog_most_visited">Baldurdash</span> <span id="game_end_dialog_n_visited">42</span> times!</p> -->
 </dialog>
 <dialog id="path_dialog">
-    <h2>Your path</h2>
+    <h2>Paths</h2>
     <div class="fixed‑list">
-        <div class="wrap" id="wrap_div">
-        </div>
+        <h3>Your path</h3>
+        <div class="wrap" id="wrap_div"></div>
+        <h3>Shortest path</h3>
+        <div class="wrap" id="shortest_path_div"></div>
     </div>
     <button id="path_dialog_back_btn" class="button-16">
         Back
